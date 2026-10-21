@@ -1,0 +1,24 @@
+[Unit]
+Description=Pumpastic Tank A USB serial-to-MQTT bridge
+After=network-online.target mosquitto.service
+Wants=network-online.target
+# Independent of pumpastic.service on purpose: if the controller restarts, readings
+# should keep flowing, and if the bridge dies the controller's sensor timeout is what
+# should react (safety rule 4), not a coupled restart.
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/pumpastic/controller
+ExecStart=/usr/bin/python3 src/serial_bridge.py --config config/config.yaml
+Restart=always
+RestartSec=10
+
+# The ESP32-S3's native USB port disappears and re-enumerates on every reset, so the
+# service must tolerate the device vanishing; it reopens the by-id path by itself.
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pumpastic — talk deck</title>
+<style>
+  :root {
+    --bg: #071a24; --bg2: #0c2a38; --panel: #10364a; --line: #1f5470;
+    --ink: #eaf6fb; --mute: #9cc3d4; --water: #38bdf8; --water2: #0ea5e9;
+    --sand: #f4d58d; --coral: #fb7185; --leaf: #4ade80; --amber: #fbbf24;
+    --mono: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--bg); color: var(--ink); font-family: var(--sans); overflow: hidden; }
+  #viewport { position: fixed; inset: 0; display: grid; place-items: center; }
+  #stage { width: 1280px; height: 720px; position: relative; transform-origin: center center; }
+  .slide {
+    position: absolute; inset: 0; padding: 64px 80px; display: flex; flex-direction: column;
+    background: radial-gradient(1200px 500px at 85% 115%, rgba(56,189,248,.16), transparent 60%),
+                linear-gradient(160deg, var(--bg2), var(--bg) 70%);
+    border-radius: 18px; overflow: hidden; opacity: 0; pointer-events: none;
+    transition: opacity .35s ease, transform .35s ease; transform: translateY(12px);
+  }
+  .slide.active { opacity: 1; pointer-events: auto; transform: none; }
+  .kicker { font: 600 15px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--water); margin-bottom: 18px; }
+  h1 { font-size: 76px; line-height: 1.02; letter-spacing: -.02em; }
+  h2 { font-size: 46px; line-height: 1.1; letter-spacing: -.01em; margin-bottom: 26px; }
+  h3 { font-size: 22px; margin-bottom: 8px; }
+  p, li { font-size: 22px; line-height: 1.45; color: var(--mute); }
+  strong { color: var(--ink); }
+  .lead { font-size: 27px; color: var(--mute); max-width: 900px; }
+  .grid { display: grid; gap: 18px; }
+  .g2 { grid-template-columns: 1fr 1fr; } .g3 { grid-template-columns: repeat(3, 1fr); } .g4 { grid-template-columns: repeat(4, 1fr); }
+  .card { background: rgba(16,54,74,.78); border: 1px solid var(--line); border-radius: 14px; padding: 24px 26px; }
+  .card p { font-size: 20px; }
+  .card h3 { font-size: 24px; }
+  .stat { font: 700 52px/1 var(--sans); color: var(--ink); letter-spacing: -.02em; }
+  .stat small { font-size: 22px; color: var(--mute); font-weight: 600; margin-left: 4px; }
+  .label { font-size: 18px; color: var(--mute); margin-top: 8px; }
+  .tag { display: inline-block; font: 600 13px/1 var(--mono); padding: 6px 9px; border-radius: 999px; border: 1px solid var(--line); color: var(--mute); margin: 0 6px 6px 0; }
+  .num { font: 700 15px/1 var(--mono); color: var(--bg); background: var(--water); border-radius: 6px; padding: 5px 8px; margin-right: 10px; }
+  ul.clean { list-style: none; } ul.clean li { padding: 7px 0; }
+  .foot { position: absolute; left: 80px; right: 80px; bottom: 26px; display: flex; justify-content: space-between; font: 500 14px var(--mono); color: #5f8ea3; }
+  code { font-family: var(--mono); font-size: .88em; color: var(--sand); }
+  pre { font: 16px/1.5 var(--mono); color: var(--ink); background: #061620; border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; white-space: pre; }
+  .hl { color: var(--water); } .ok { color: var(--leaf); } .bad { color: var(--coral); } .warn { color: var(--amber); } .sand { color: var(--sand); }
+  svg text { font-family: var(--sans); }
+  #progress { position: fixed; left: 0; bottom: 0; height: 4px; background: var(--water); transition: width .3s; z-index: 5; }
+  #hint { position: fixed; right: 14px; bottom: 10px; font: 12px var(--mono); color: #4f7b8f; z-index: 5; }
+  .incident { border-left: 4px solid var(--coral); }
+  .incident .fix { color: var(--leaf); font-size: 18px; margin-top: 10px; }
+  .waves { position: absolute; left: 0; right: 0; bottom: 0; height: 160px; opacity: .55; }
+  @media print {
+    html, body { overflow: visible; height: auto; }
+    #viewport { position: static; display: block; } #stage { transform: none !important; }
+    .slide { position: relative; opacity: 1; transform: none; page-break-after: always; margin-bottom: 0; }
+    #progress, #hint { display: none; }
+    @page { size: 1280px 720px; margin: 0; }
+  }
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage">
+
+<!-- 1 · Title -->
+<section class="slide">
+  <div class="kicker">Coding from Beach · Peregian Digital Hub</div>
+  <h1>Pumpastic<br><span class="hl">rainwater that moves itself</span></h1>
+  <p class="lead" style="margin-top:28px">Two ESP32s, a Raspberry Pi, a smart plug and a pump, built with a Claude Code agent as a pair. What worked, what flooded, and how to build your own.</p>
+  <div style="margin-top:34px">
+    <span class="tag">ESP32-S3</span><span class="tag">MQTT</span><span class="tag">Python asyncio</span><span class="tag">PlatformIO</span><span class="tag">Claude Code</span><span class="tag">e-ink</span><span class="tag">Modbus</span>
+  </div>
+  <svg class="waves" viewBox="0 0 1280 160" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0 80 C 160 40, 320 120, 480 80 S 800 40, 960 80 S 1180 120, 1280 70 V160 H0Z" fill="#0ea5e9" opacity=".25"/>
+    <path d="M0 105 C 200 75, 360 140, 560 105 S 900 75, 1080 105 S 1220 130, 1280 100 V160 H0Z" fill="#38bdf8" opacity=".3"/>
+  </svg>
+</section>
+
+<!-- 2 · Problem -->
+<section class="slide">
+  <div class="kicker">The problem</div>
+  <h2>A small tank that overflows in every storm,<br>and a big one with room to spare</h2>
+  <div class="grid g2" style="align-items:center; gap:40px">
+    <svg viewBox="0 0 560 330" width="560" height="330" role="img" aria-label="Small Tank A overflowing, pump lifting water 16 metres to large Tank B">
+      <rect x="20" y="150" width="120" height="160" rx="8" fill="none" stroke="#9cc3d4" stroke-width="3"/>
+      <rect x="23" y="166" width="114" height="141" fill="#38bdf8" opacity=".75"/>
+      <path d="M140 172 h22 v40" stroke="#38bdf8" stroke-width="5" fill="none"/>
+      <circle cx="162" cy="222" r="4" fill="#38bdf8"/><circle cx="162" cy="238" r="3" fill="#38bdf8"/>
+      <text x="80" y="140" fill="#eaf6fb" font-size="18" text-anchor="middle" font-weight="700">Tank A</text>
+      <text x="80" y="327" fill="#9cc3d4" font-size="15" text-anchor="middle">4,820 L</text>
+      <rect x="196" y="270" width="54" height="36" rx="6" fill="#10364a" stroke="#f4d58d" stroke-width="2"/>
+      <text x="223" y="293" fill="#f4d58d" font-size="13" text-anchor="middle" font-weight="700">PUMP</text>
+      <path d="M140 296 H196 M250 288 C 320 288, 330 70, 390 70 H 360" stroke="#f4d58d" stroke-width="3" fill="none" stroke-dasharray="7 6"/>
+      <text x="232" y="150" fill="#f4d58d" font-size="15" text-anchor="middle">16 m lift</text><text x="232" y="170" fill="#f4d58d" font-size="15" text-anchor="middle">60 m pipe</text>
+      <rect x="370" y="40" width="170" height="210" rx="10" fill="none" stroke="#9cc3d4" stroke-width="3"/>
+      <rect x="373" y="150" width="164" height="97" fill="#0ea5e9" opacity=".6"/>
+      <text x="455" y="30" fill="#eaf6fb" font-size="18" text-anchor="middle" font-weight="700">Tank B (×2)</text>
+      <text x="455" y="272" fill="#9cc3d4" font-size="15" text-anchor="middle">35,097 L</text>
+    </svg>
+    <ul class="clean">
+      <li><strong>Manual pumping</strong> means watching the weather and remembering to switch it off.</li>
+      <li><strong>Forget for 10 minutes</strong> and the pump runs dry: seals gone.</li>
+      <li><strong>Forget in a storm</strong> and Tank A spills water you wanted.</li>
+      <li class="sand" style="margin-top:10px">Goal: unattended, and boringly safe.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 3 · Architecture -->
+<section class="slide">
+  <div class="kicker">The system</div>
+  <h2>One writer, many readers</h2>
+  <svg viewBox="0 0 1120 440" width="1120" height="440" role="img" aria-label="Architecture: sensor nodes publish over MQTT to a Raspberry Pi; only the state machine switches the smart plug and pump; dashboard, e-ink, alerts, weather and solar only read">
+    <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#9cc3d4"/></marker></defs>
+    <g font-size="16" fill="#eaf6fb">
+      <rect x="10" y="60" width="230" height="78" rx="12" fill="#10364a" stroke="#1f5470"/>
+      <text x="125" y="93" text-anchor="middle" font-weight="700">Tank A node</text><text x="125" y="118" text-anchor="middle" fill="#9cc3d4" font-size="14">ESP32-S3 + JSN-SR04T · USB</text>
+      <rect x="10" y="190" width="230" height="78" rx="12" fill="#10364a" stroke="#1f5470"/>
+      <text x="125" y="223" text-anchor="middle" font-weight="700">Tank B node</text><text x="125" y="248" text-anchor="middle" fill="#9cc3d4" font-size="14">ESP32-S3 + JSN-SR04T · WiFi</text>
+      <rect x="350" y="30" width="390" height="300" rx="16" fill="#0c2a38" stroke="#38bdf8" stroke-width="2"/>
+      <text x="545" y="64" text-anchor="middle" font-weight="700" font-size="19">Raspberry Pi</text>
+      <rect x="375" y="82" width="340" height="44" rx="8" fill="#10364a"/><text x="545" y="110" text-anchor="middle">Mosquitto MQTT broker</text>
+      <rect x="375" y="138" width="340" height="56" rx="8" fill="#38bdf8"/><text x="545" y="164" text-anchor="middle" fill="#071a24" font-weight="800">pump state machine</text><text x="545" y="184" text-anchor="middle" fill="#071a24" font-size="13">the only thing that touches the pump</text>
+      <rect x="375" y="206" width="340" height="104" rx="8" fill="#10364a"/>
+      <text x="545" y="232" text-anchor="middle" fill="#9cc3d4" font-size="14">read-only consumers of one retained snapshot</text>
+      <text x="545" y="260" text-anchor="middle">dashboard · e-ink renderer · alerts</text><text x="545" y="286" text-anchor="middle">weather · solar · history</text>
+      <rect x="860" y="138" width="220" height="56" rx="10" fill="#10364a" stroke="#f4d58d"/><text x="970" y="172" text-anchor="middle" fill="#f4d58d" font-weight="700">smart plug → PUMP</text>
+      <rect x="860" y="250" width="220" height="56" rx="10" fill="#10364a" stroke="#1f5470"/><text x="970" y="283" text-anchor="middle">solar inverter (Modbus)</text>
+      <rect x="350" y="370" width="390" height="56" rx="10" fill="#10364a" stroke="#1f5470"/><text x="545" y="404" text-anchor="middle">e-ink wall display (battery, sleeps 2 h)</text>
+    </g>
+    <g stroke="#9cc3d4" stroke-width="2" fill="none" marker-end="url(#ar)">
+      <path d="M240 99 H372"/><path d="M240 229 C 300 229, 300 110, 372 110"/>
+      <path d="M716 166 H858"/><path d="M858 278 H718"/><path d="M545 312 V368"/>
+    </g>
+    <text x="300" y="82" fill="#9cc3d4" font-size="13" text-anchor="middle">level JSON / 30 s</text>
+  </svg>
+</section>
+
+<!-- 4 · Hardware -->
+<section class="slide">
+  <div class="kicker">Hardware</div>
+  <h2>Off-the-shelf parts, plus a pump</h2>
+  <div class="grid g3">
+    <div class="card"><h3>Sensor nodes ×2</h3><p>ESP32-S3 on a screw-terminal base, JSN-SR04T waterproof ultrasonic probe. Median of 5 echoes every 30 s.</p></div>
+    <div class="card"><h3>Raspberry Pi 3</h3><p>Broker, controller, dashboard. Lives in a weatherproof box next to Tank A, with the node on a 10 cm USB lead.</p></div>
+    <div class="card"><h3>Tapo P110M plug</h3><p>Local API via the <code>tapo</code> library, plus power metering, which doubles as a dry-run detector.</p></div>
+    <div class="card"><h3>600 W transfer pump</h3><p>Rated 3,600 L/h at zero head; measured <strong>1,540 L/h</strong> up 16 m.</p></div>
+    <div class="card"><h3>Float switch</h3><p>Wired in series with the pump. The one safety layer that needs no software.</p></div>
+    <div class="card"><h3>Extras</h3><p>7.3" 6-colour e-ink frame, the house's solar inverter, a USB webcam so the agent can see the LEDs.</p></div>
+  </div>
+</section>
+
+<!-- 5 · Safety -->
+<section class="slide">
+  <div class="kicker">Safety first</div>
+  <h2>Layers, because every layer fails eventually</h2>
+  <div class="grid g2" style="gap:36px; align-items:start">
+    <ul class="clean">
+      <li><span class="num">1</span>Never pump if Tank A &lt; <strong>20%</strong></li>
+      <li><span class="num">2</span>Never pump if Tank B &gt; <strong>95%</strong></li>
+      <li><span class="num">3</span>Runtime cap <strong>90 min</strong> → OFF + alert</li>
+      <li><span class="num">4</span>Sensor silent <strong>120 s</strong> → FAULT</li>
+      <li><span class="num">5</span>Plug unreachable → OFF</li>
+      <li><span class="num">6</span>Hysteresis: start 94%, stop 60%</li>
+      <li><span class="num">7</span>Every threshold in <code>config.yaml</code></li>
+      <li><span class="num">8</span>A start needs <strong>3 agreeing readings</strong></li>
+    </ul>
+    <svg viewBox="0 0 460 380" width="460" height="380" role="img" aria-label="Defence in depth: thresholds, confirmation, runtime cap, float switch">
+      <g font-size="17" text-anchor="middle" font-weight="700">
+        <rect x="10" y="10" width="440" height="360" rx="22" fill="#10364a" stroke="#1f5470"/><text x="230" y="44" fill="#9cc3d4">hardware float switch</text>
+        <rect x="45" y="62" width="370" height="290" rx="20" fill="#0c2a38" stroke="#1f5470"/><text x="230" y="96" fill="#9cc3d4">runtime cap (sized from measured flow)</text>
+        <rect x="80" y="114" width="300" height="220" rx="18" fill="#10364a" stroke="#1f5470"/><text x="230" y="148" fill="#9cc3d4">sensor timeout · plug fail-off</text>
+        <rect x="115" y="166" width="230" height="150" rx="16" fill="#0c2a38" stroke="#1f5470"/><text x="230" y="200" fill="#9cc3d4">3-reading confirmation</text>
+        <rect x="150" y="218" width="160" height="80" rx="14" fill="#38bdf8"/><text x="230" y="264" fill="#071a24">thresholds</text>
+      </g>
+    </svg>
+  </div>
+</section>
+
+<!-- 6 · State machine -->
+<section class="slide">
+  <div class="kicker">The brain</div>
+  <h2>Five states, one writer</h2>
+  <svg viewBox="0 0 1120 360" width="1120" height="360" role="img" aria-label="State machine IDLE to MIN_RUN to RUNNING to COOLDOWN back to IDLE, with FAULT reachable from any state">
+    <defs><marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10z" fill="#9cc3d4"/></marker></defs>
+    <g font-weight="800" font-size="20" text-anchor="middle">
+      <rect x="20" y="70" width="180" height="70" rx="35" fill="#10364a" stroke="#38bdf8" stroke-width="2"/><text x="110" y="112" fill="#eaf6fb">IDLE</text>
+      <rect x="320" y="70" width="180" height="70" rx="35" fill="#10364a" stroke="#38bdf8" stroke-width="2"/><text x="410" y="112" fill="#eaf6fb">MIN_RUN</text>
+      <rect x="620" y="70" width="180" height="70" rx="35" fill="#10364a" stroke="#38bdf8" stroke-width="2"/><text x="710" y="112" fill="#eaf6fb">RUNNING</text>
+      <rect x="920" y="70" width="180" height="70" rx="35" fill="#10364a" stroke="#38bdf8" stroke-width="2"/><text x="1010" y="112" fill="#eaf6fb">COOLDOWN</text>
+      <rect x="470" y="250" width="180" height="70" rx="35" fill="#3b1220" stroke="#fb7185" stroke-width="2"/><text x="560" y="292" fill="#fb7185">FAULT</text>
+    </g>
+    <g stroke="#9cc3d4" stroke-width="2" fill="none" marker-end="url(#a2)">
+      <path d="M200 105 H318"/><path d="M500 105 H618"/><path d="M800 105 H918"/>
+      <path d="M1010 70 C 1010 10, 110 10, 110 68"/>
+    </g>
+    <g stroke="#fb7185" stroke-width="2" fill="none" stroke-dasharray="6 6" marker-end="url(#a2)">
+      <path d="M410 142 L 520 248"/><path d="M710 142 L 600 248"/><path d="M110 142 C 110 285, 300 285, 468 285"/>
+    </g>
+    <g font-size="15" fill="#9cc3d4" text-anchor="middle">
+      <text x="259" y="92">A ≥ 94% ×3</text><text x="559" y="92">after 5 min</text><text x="859" y="92">A ≤ 60%</text><text x="560" y="58">after 10 min cooldown</text>
+      <text x="300" y="240" fill="#fb7185">cap · timeout · plug · limits</text><text x="840" y="290" fill="#9cc3d4">auto-clears when safe</text>
+    </g>
+  </svg>
+  <p style="margin-top:6px">Every 5 s. Readings arrive every 30 s, so "3 agreeing" counts <strong>distinct readings</strong>, not ticks.</p>
+</section>
+
+<!-- 7 · Numbers -->
+<section class="slide">
+  <div class="kicker">Measured, not assumed</div>
+  <h2>The numbers that set the limits</h2>
+  <div class="grid g4" style="margin-top:6px">
+    <div class="card"><div class="stat">1,540<small>L/h</small></div><div class="label">flow, two methods agree within 0.3%</div></div>
+    <div class="card"><div class="stat">620<small>W</small></div><div class="label">steady power while pumping</div></div>
+    <div class="card"><div class="stat">0.40<small>kWh</small></div><div class="label">per 1,000 L moved</div></div>
+    <div class="card"><div class="stat">64<small>min</small></div><div class="label">one 94% → 60% cycle</div></div>
+  </div>
+  <div class="grid g2" style="margin-top:22px; gap:24px">
+    <div class="card"><h3>Sizing the runtime cap</h3><p>90 min × 1,540 L/h ≈ 2,300 L. From a 94% start, Tank A can't go below <strong>~46%</strong>, even with a frozen sensor. The cap is a <span class="sand">calculation</span>, not a guess.</p></div>
+    <div class="card"><h3>The first estimate was 5× wrong</h3><p>Two noisy mid-transfer readings said 135 L/min. Settled before/after medians said <strong>25.7</strong>. Only measure a still surface.</p></div>
+  </div>
+</section>
+
+<!-- 8 · Lessons -->
+<section class="slide">
+  <div class="kicker">What went wrong</div>
+  <h2>Five incidents, five rules</h2>
+  <div class="grid g3" style="gap:14px">
+    <div class="card incident"><h3>A test moved 164 L</h3><p>A synthetic "95%" on the live broker started the real pump.</p><div class="fix">→ test data is a command</div></div>
+    <div class="card incident"><h3>One echo, 26 minutes</h3><p>A dead-zone echo read as "100%" and started the pump on a 68% tank.</p><div class="fix">→ validate against physics; 3 readings</div></div>
+    <div class="card incident"><h3>"It's the router"</h3><p>It wasn't: modem sleep, dirty reconnects, and TX power the board couldn't drive.</p><div class="fix">→ the node moved to USB</div></div>
+    <div class="card incident"><h3>Blind below 66%</h3><p>The beam found the tank wall; the 60% stop never fired.</p><div class="fix">→ the runtime cap saved it</div></div>
+    <div class="card incident"><h3>The storm went silent</h3><p>Water rose above the overflow, past the "impossible" limit. Every reading was rejected, so the pump stopped when it mattered most.</p><div class="fix">→ physics needs a margin for weather</div></div>
+    <div class="card" style="display:flex;flex-direction:column;justify-content:center"><p style="font-size:21px">Every one of these is written up in <code>docs/08</code>, with the change it caused.</p></div>
+  </div>
+</section>
+
+<!-- 9 · Storm forensics -->
+<section class="slide">
+  <div class="kicker">Debugging with an agent · 19 Oct</div>
+  <h2>"Why is Tank A silent?"</h2>
+  <div class="grid g2" style="gap:30px; align-items:start">
+    <pre><span class="ok">17:26</span>  tank_a 100.0%  (49.6 cm)
+<span class="ok">17:27</span>  tank_a 100.0%  (47.1 cm)
+<span class="ok">17:28</span>  tank_a 100.0%  (46.1 cm)
+<span class="bad">17:30</span>  No reading for 90s — offline
+<span class="bad">17:30</span>  FAULT: Tank A silent 121s
+
+<span class="hl"># raw serial, bridge paused</span>
+Not enough valid readings (0/5)
+Raw echo us: <span class="sand">2416 2462 2433 2449 2434</span>
+<span class="hl"># 2430 µs ÷ 58 ≈ 42 cm  &lt; 45 cm floor</span></pre>
+    <ul class="clean">
+      <li>The agent read the journals, saw the level <strong>still rising while pumping</strong>, and paused the bridge to read raw serial.</li>
+      <li>The echoes were real: water ~8 cm <strong>above the overflow</strong>.</li>
+      <li>Floor 45 → 30 cm, plus an <code>"overfull"</code> flag; flashed over the Pi's USB.</li>
+      <li class="ok">Fault cleared, pump restarted, level fell ~1 cm/min, which matches the measured flow.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 10 · Claude Code -->
+<section class="slide">
+  <div class="kicker">Building it with Claude Code</div>
+  <h2>The agent as a pair, with guard rails</h2>
+  <div class="grid g3">
+    <div class="card"><h3><code>CLAUDE.md</code></h3><p>Non-negotiable safety rules, conventions, and the known hazards ("this test moves real water") in every session.</p></div>
+    <div class="card"><h3>Skills</h3><p>One per subsystem: firmware, controller, smart plug, system test, webcam. Loaded before the agent touches that area.</p></div>
+    <div class="card"><h3>Tests before deploys</h3><p>107 hardware-free tests, including a replay of the real false start. Run on the laptop, then on the Pi.</p></div>
+    <div class="card"><h3>Eyes on hardware</h3><p>A webcam aimed at the board lets the agent read LED colours after a flash.</p></div>
+    <div class="card"><h3>Hands off the network</h3><p>Router: query only. Mains and water: the human approves every step.</p></div>
+    <div class="card"><h3>Secrets out of context</h3><p>Credentials live in gitignored files and a root-only env file, never in the repo.</p></div>
+  </div>
+</section>
+
+<!-- 11 · Extras -->
+<section class="slide">
+  <div class="kicker">The fun bits</div>
+  <h2>Dashboard, e-ink, weather, solar</h2>
+  <div class="grid g2" style="gap:24px">
+    <div class="card"><h3>Mobile dashboard</h3><p>Tank gauges with threshold markers, pump runtime against the cap, history, Pi health, live-editable config, Force OFF. Static HTML polling a Flask API.</p></div>
+    <div class="card"><h3>E-ink wall frame</h3><p>The Pi renders a 6-colour frame; the device wakes every 2 h, downloads 192 KB, refreshes, and sleeps. Runs on a battery; layout changes need no reflash.</p></div>
+    <div class="card"><h3>Rain forecast</h3><p>Open-Meteo, cached, informational only. A weather outage can't touch pumping.</p></div>
+    <div class="card"><h3>Solar</h3><p>Huawei inverter over Modbus TCP via its dongle, which allows one client, so one persistent connection. Next idea: prefer pumping while exporting.</p></div>
+  </div>
+</section>
+
+<!-- 12 · Roadmap -->
+<section class="slide">
+  <div class="kicker">What's next</div>
+  <h2>Making it boringly safe, for real</h2>
+  <div class="grid g2" style="gap:18px">
+    <div class="card"><h3><span class="num">1</span>Float switch</h3><p>A pump-down float in series with the pump supply. Cuts the motor when Tank A is low, even if the sensor, the Pi and the network all fail together.</p></div>
+    <div class="card"><h3><span class="num">2</span>Shelly Pro 1PM</h3><p>Replaces the smart plug: DIN-rail, Ethernet, local API with no cloud, driving a contactor. Its own <strong>auto-off timer</strong> caps a run even if the Pi dies.</p></div>
+    <div class="card"><h3><span class="num">3</span>Isolated network</h3><p>An IoT VLAN with firewall rules, or the Pi hosting its own WLAN for the nodes. Today anyone on the LAN could publish "Tank A 95%" and start the pump.</p></div>
+    <div class="card"><h3><span class="num">4</span>Hydrostatic sensor</h3><p>A submersible 4–20 mA pressure sensor on the tank floor: no dead zone, no echoes, reads to the bottom, and a broken wire is detectable.</p></div>
+  </div>
+  <div style="margin-top:18px">
+    <span class="tag">Tank B sensor</span><span class="tag">drawdown check</span><span class="tag">enable dry-run detection</span><span class="tag">Pi on Ethernet</span><span class="tag">solar-aware starts</span><span class="tag">pump ahead of forecast rain</span>
+  </div>
+</section>
+
+<!-- 13 · Sensor upgrade -->
+<section class="slide">
+  <div class="kicker">Three of the five incidents were the sensor</div>
+  <h2>Ultrasonic vs hydrostatic</h2>
+  <div class="grid g2" style="gap:34px; align-items:center">
+    <svg viewBox="0 0 540 400" width="540" height="400" role="img" aria-label="Two tanks: ultrasonic sensor on the lid with dead zone and a stray echo off a rib; hydrostatic sensor on the floor reading the full depth">
+      <g font-size="15" fill="#9cc3d4" text-anchor="middle">
+        <rect x="20" y="60" width="220" height="300" rx="8" fill="none" stroke="#9cc3d4" stroke-width="3"/>
+        <rect x="23" y="170" width="214" height="187" fill="#38bdf8" opacity=".55"/>
+        <rect x="105" y="44" width="50" height="22" rx="4" fill="#f4d58d"/>
+        <rect x="23" y="66" width="214" height="30" fill="#fb7185" opacity=".25"/><text x="20" y="32" fill="#fb7185" font-size="13" text-anchor="start">dead zone reads "full"</text>
+        <path d="M130 66 L60 360 M130 66 L205 230" stroke="#f4d58d" stroke-dasharray="5 5" stroke-width="2"/>
+        <rect x="200" y="230" width="37" height="12" fill="#9cc3d4"/><text x="236" y="262" fill="#fb7185" font-size="13" text-anchor="end">stray echo</text>
+        <text x="130" y="390" fill="#eaf6fb" font-weight="700">ultrasonic, on the lid</text>
+        <rect x="300" y="60" width="220" height="300" rx="8" fill="none" stroke="#9cc3d4" stroke-width="3"/>
+        <rect x="303" y="170" width="214" height="187" fill="#38bdf8" opacity=".55"/>
+        <path d="M410 60 V335" stroke="#f4d58d" stroke-width="3"/>
+        <rect x="396" y="335" width="28" height="18" rx="4" fill="#f4d58d"/>
+        <path d="M480 170 V335" stroke="#4ade80" stroke-width="2" marker-end="url(#ar)"/>
+        <text x="474" y="246" fill="#4ade80" font-size="13" text-anchor="end">pressure</text><text x="474" y="264" fill="#4ade80" font-size="13" text-anchor="end">∝ depth</text>
+        <text x="410" y="390" fill="#eaf6fb" font-weight="700">hydrostatic, on the floor</text>
+      </g>
+    </svg>
+    <ul class="clean">
+      <li><span class="bad">✗</span> Dead-zone echo started the pump <span class="ok">→ no dead zone</span></li>
+      <li><span class="bad">✗</span> Blind below 66% <span class="ok">→ reads to the floor</span></li>
+      <li><span class="bad">✗</span> Storm overfill silenced it <span class="ok">→ no top limit</span></li>
+      <li><span class="bad">✗</span> Condensation, foam <span class="ok">→ not affected</span></li>
+      <li style="margin-top:12px; font-size:19px">Costs: a vented cable, a 12–24 V loop supply, an external ADC (ADS1115), and surge protection. Under 3.6 mA = fault, so a broken wire fails safe.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 14 · Build your own -->
+<section class="slide">
+  <div class="kicker">Build your own</div>
+  <h2>The blueprint repo</h2>
+  <div class="grid g2" style="gap:30px; align-items:start">
+    <pre><span class="hl">CLAUDE.md</span>               rules for your agent
+<span class="hl">CLAUDE.local.md.example</span> your site profile
+docs/
+  01 overview      06 security
+  02 hardware      07 calibration
+  03 software      08 lessons learned
+  04 protocols     <span class="sand">09 build plan</span>
+  05 safety        10 roadmap
+.claude/skills/         5 subsystem skills
+reference/              working code + tests</pre>
+    <div>
+      <p style="margin-bottom:14px">Clone it, fill in your site profile, and ask your agent to follow the build plan:</p>
+      <ul class="clean">
+        <li><span class="num">0</span>Measure the tanks</li>
+        <li><span class="num">1</span>Sensor on the bench</li>
+        <li><span class="num">2</span>Pi + broker, no pump</li>
+        <li><span class="num">3</span>Plug with a <strong>lamp</strong></li>
+        <li><span class="num">4</span>Sensors in the tanks</li>
+        <li><span class="num">5</span>The pump <span class="warn">(human approves)</span></li>
+        <li><span class="num">6</span>Unattended for a week</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 15 · Thanks -->
+<section class="slide" style="justify-content:center">
+  <div class="kicker">Thanks</div>
+  <h1>Questions?</h1>
+  <p class="lead" style="margin-top:22px">Bring your tank stories. Bonus points if they involve a pump that ran dry.</p>
+  <div style="margin-top:30px"><span class="tag">MIT licensed</span><span class="tag">docs/09-build-plan.md</span><span class="tag">reference/ · 107 tests</span></div>
+  <svg class="waves" viewBox="0 0 1280 160" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0 80 C 160 40, 320 120, 480 80 S 800 40, 960 80 S 1180 120, 1280 70 V160 H0Z" fill="#0ea5e9" opacity=".25"/>
+    <path d="M0 105 C 200 75, 360 140, 560 105 S 900 75, 1080 105 S 1220 130, 1280 100 V160 H0Z" fill="#38bdf8" opacity=".3"/>
+  </svg>
+</section>
+
+</div></div>
+<div id="progress"></div>
+<div id="hint">← → / click · F fullscreen</div>
+<script>
+  const slides = [...document.querySelectorAll('.slide')];
+  const stage = document.getElementById('stage');
+  const bar = document.getElementById('progress');
+  slides.forEach((s, i) => {
+    const f = document.createElement('div'); f.className = 'foot';
+    f.innerHTML = `<span>pumpastic</span><span>${i + 1} / ${slides.length}</span>`;
+    s.appendChild(f);
+  });
+  let i = Math.min(Math.max(parseInt(location.hash.slice(1)) - 1 || 0, 0), slides.length - 1);
+  function show(n) {
+    i = Math.min(Math.max(n, 0), slides.length - 1);
+    slides.forEach((s, k) => s.classList.toggle('active', k === i));
+    bar.style.width = ((i + 1) / slides.length * 100) + '%';
+    history.replaceState(null, '', '#' + (i + 1));
+  }
+  function fit() {
+    const k = Math.min(innerWidth / 1280, innerHeight / 720) * 0.98;
+    stage.style.transform = `scale(${k})`;
+  }
+  addEventListener('resize', fit);
+  addEventListener('keydown', e => {
+    if (['ArrowRight', 'PageDown', ' ', 'Enter'].includes(e.key)) { e.preventDefault(); show(i + 1); }
+    else if (['ArrowLeft', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); show(i - 1); }
+    else if (e.key === 'Home') show(0);
+    else if (e.key === 'End') show(slides.length - 1);
+    else if (e.key.toLowerCase() === 'f') {
+      if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen?.();
+    }
+  });
+  document.addEventListener('click', e => { if (e.button === 0) show(e.clientX < innerWidth / 3 ? i - 1 : i + 1); });
+  let x0 = null;
+  addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, { passive: true });
+  addEventListener('touchend', e => {
+    if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0;
+    if (Math.abs(dx) > 40) show(dx < 0 ? i + 1 : i - 1); x0 = null;
+  });
+  fit(); show(i);
+</script>
+</body>
+</html>

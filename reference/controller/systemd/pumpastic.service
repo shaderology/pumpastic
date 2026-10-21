@@ -1,0 +1,26 @@
+[Unit]
+Description=Pumpastic Water Tank Controller
+After=network-online.target mosquitto.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/pumpastic/controller
+ExecStart=/usr/bin/python3 src/controller.py
+Restart=always
+RestartSec=10
+
+# TP-Link account for the `tapo` library (Tapo P110M smart plug): TAPO_USERNAME and
+# TAPO_PASSWORD. Kept out of the unit so it can be shared; systemd reads the file as
+# root before dropping to User=, so it can be root-only:
+#   sudo install -m 600 -o root -g root pumpastic.env.example /etc/pumpastic.env
+EnvironmentFile=/etc/pumpastic.env
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=pumpastic
+
+[Install]
+WantedBy=multi-user.target

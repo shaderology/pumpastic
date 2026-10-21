@@ -1,0 +1,31 @@
+# Secrets and site-specific files
+config.yaml
+.env
+*.env
+!*.env.example
+*.secrets
+secrets.h
+CLAUDE.local.md
+.claude/settings.local.json
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+
+# PlatformIO
+.pio/
+.vscode/
+
+# Runtime data and captures
+data/
+*.log
+*.csv
+tools/webcam_*.jpg
+firmware-backup/
+
+# OS
+.DS_Store
+Thumbs.db

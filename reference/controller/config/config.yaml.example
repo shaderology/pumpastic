@@ -1,0 +1,127 @@
+# Pumpastic Controller Configuration
+# Copy to config.yaml and fill in real values
+# DO NOT commit config.yaml to git
+
+mqtt:
+  broker: "localhost"
+  port: 1883
+  client_id: "pumpastic-controller"
+
+tanks:
+  tank_a:
+    sensor_topic: "rainwater/tank_a/level/state"
+    status_topic: "rainwater/tank_a/status"
+    # height_cm: sensor face -> tank floor. overflow_height_cm: floor -> overflow
+    # outlet, and the scale level_pct is measured against (100% = at the outlet).
+    # Measured 2026-09-15: 1.9 m diameter, sensor 2.2 m up, overflow 1.7 m.
+    height_cm: 220
+    overflow_height_cm: 170
+    capacity_litres: 4820        # pi*(1.9/2)^2 * 1.7 m3
+  tank_b:
+    sensor_topic: "rainwater/tank_b/level/state"
+    status_topic: "rainwater/tank_b/status"
+    # Tank B is two tanks plumbed together with a common water level: B1 (3.45 m
+    # dia, overflow 2.2 m) + B2 (2.9 m dia, overflow 2.35 m) = 15.9534 m2 combined.
+    # B1 spills first, so 2.2 m is the governing overflow.
+    # height_cm assumes the sensor is mounted on B2, the taller tank (2.45 m).
+    height_cm: 245
+    overflow_height_cm: 220
+    capacity_litres: 35097       # 15.9534 m2 * 2.2 m
+    # simulated_pct: 50   # Uncomment when no physical sensor is connected.
+    #                      # Controller injects a fake reading at this level every 60 s,
+    #                      # preventing sensor-timeout FAULTs. Remove once Tank B ESP32 is wired.
+
+# Tank A runs with its radio off and reports over USB serial; serial_bridge.py
+# republishes to the same MQTT topics. Omit this section for an all-WiFi setup.
+# See docs/04-protocols.md.
+serial_bridge:
+  sensor_id: tank_a
+  # Always the by-id path: /dev/ttyACM0 is not stable across resets. The suffix is the
+  # board's MAC (ls /dev/serial/by-id/). Omit `port` to glob for any Espressif board.
+  port: /dev/serial/by-id/usb-Espressif_USB_JTAG_serial_debug_unit_XX:XX:XX:XX:XX:XX-if00
+  baud: 115200
+  silence_timeout_seconds: 90   # below sensor_timeout_seconds so the bridge reports first
+
+pump:
+  start_threshold_pct: 94      # Tank A 1.598 m — just under the 1.7 m overflow
+  # Distinct readings that must all meet the start condition before the pump runs.
+  # 1 would let a single bad reading start it, which is exactly what happened on
+  # 2026-09-24 (dead-zone readings seen as 100%). Keep at 2 or more.
+  start_confirm_readings: 3
+  stop_low_threshold_pct: 60
+  stop_high_threshold_pct: 90
+  min_run_seconds: 300
+  cooldown_seconds: 600
+  max_run_seconds: 5400       # 90 min: a 94%→60% cycle takes ~64 min at 1 540 L/h
+  sensor_timeout_seconds: 120
+  absolute_min_pct: 20       # Safety rule 1: NEVER pump if Tank A below this
+  absolute_max_pct: 95       # Safety rule 2: NEVER pump if Tank B above this
+  fault_clear_seconds: 300   # Time in FAULT before auto-clear (if conditions are safe)
+  # Sensor stuck detection: FAULT if last N readings are within delta_cm of each other.
+  # Set stuck_detection_count: 0 to disable (default). Enable once sensor baseline is known.
+  stuck_detection_count: 0
+  stuck_detection_delta_cm: 0.5
+  # Dry-run detection: FAULT if pump draws below threshold for too long.
+  # Set dry_run_watt_threshold: 0 to disable (default). Set once pump power draw is known.
+  dry_run_watt_threshold: 0
+  dry_run_timeout_seconds: 30
+
+plug:
+  host: "192.168.1.20"        # EXAMPLE: your plug's IP (give it a DHCP reservation)
+  type: "tapo_p110m"
+  # Credentials come from the environment, never this file:
+  #   TAPO_USERNAME / TAPO_PASSWORD (see systemd/pumpastic.env.example)
+
+alerts:
+  # ntfy topics are public: anyone who knows the name can read and post to it.
+  # Pick a long random name (e.g. `python -c "import secrets; print(secrets.token_hex(12))"`).
+  # Leave it empty to disable alerts.
+  ntfy_topic: "pumpastic-CHANGE-ME"
+  ntfy_server: "https://ntfy.sh"
+  events:
+    - pump_start
+    - pump_stop
+    - fault
+    - max_runtime_exceeded
+    - sensor_offline
+
+dashboard:
+  enabled: true
+  host: "0.0.0.0"
+  port: 8080
+
+logging:
+  level: "INFO"
+  file: "/var/log/pumpastic/controller.log"
+
+# Weather + rain forecast for the dashboard and e-ink display (Open-Meteo, no API key).
+# Informational only — never used by pump control.
+weather:
+  location_name: "Your Town"   # EXAMPLE: shown on the dashboard and e-ink panel
+  latitude: 51.4779            # EXAMPLE: your coordinates (a town centre is plenty)
+  longitude: -0.0015
+  timezone: "UTC"              # your IANA zone, e.g. "Europe/Berlin"
+  refresh_minutes: 30
+
+# E-ink status display (Waveshare PhotoPainter). The device asks /display/frame.bin
+# and sleeps for as long as the server says. Refreshes at start, start+interval, …
+# up to (not including) end: 6/21/2 → 06:00, 08:00 … 20:00. See docs/04-protocols.md.
+display:
+  active_start_hour: 6
+  active_end_hour: 21
+  refresh_interval_hours: 2
+  timezone: "UTC"              # same IANA zone as weather.timezone
+  # portrait = 480x800 layout. portrait_turn = which way the frame was turned from
+  # landscape: cw (old left edge on top) or ccw (old right edge on top).
+  orientation: portrait
+  portrait_turn: cw
+
+# Solar inverter (Huawei SUN2000 family) via the SDongleA-05's Modbus TCP.
+# Read-only (function 0x03 only), informational only. The dongle allows ONE client, so
+# nothing else should poll it while this is enabled. See docs/04-protocols.md.
+solar:
+  enabled: true
+  host: 192.168.1.30          # EXAMPLE: the SDongle's IP
+  port: 502
+  unit_id: 1
+  poll_seconds: 30

@@ -1,0 +1,43 @@
+# CLAUDE.local.md — site profile (copy to CLAUDE.local.md; it's gitignored)
+
+Claude Code loads this next to CLAUDE.md. Everything specific to *your* site goes here,
+never in tracked files. Replace every <...>.
+
+## Network
+
+| Device | Address | Notes |
+|---|---|---|
+| Raspberry Pi (broker, controller, dashboard) | <192.168.1.10> | give it a DHCP reservation |
+| Smart plug | <192.168.1.20> | reservation; local API enabled |
+| Tank A node | <USB on the Pi, or 192.168.1.40> | |
+| Tank B node | <192.168.1.41> | |
+| Solar dongle (optional) | <192.168.1.30:502> | Modbus TCP, one client only |
+| E-ink display (optional) | <DHCP> | |
+
+- WiFi SSID / password: <in firmware secrets.h only — don't repeat it here unless you want to>
+- Pi SSH: user <pi>, key <~/.ssh/pumpastic>, deploy path </home/pi/pumpastic>
+- Workstation serial port for flashing: <COM3 or /dev/ttyACM0>
+
+## Tanks (measure with a tape; see docs/07-calibration.md)
+
+| | Tank A (source) | Tank B (destination) |
+|---|---|---|
+| Shape / diameter | <round, 1.90 m> | <...> |
+| Sensor face → floor (`height_cm`) | <220> | <...> |
+| Floor → overflow outlet (`overflow_height_cm`) | <170> | <...> |
+| Litres at overflow (`capacity_litres`) | <4820> | <...> |
+| Sensor dead zone (measured) | <22.7 cm> | <...> |
+
+## Pump and plug
+
+- Pump: <model>, rated <W>, <max head m>. Measured flow: <L/h>, power: <W> (fill in after phase 5)
+- Static lift A → B: <m>; pipe run <m>, ID <mm>
+- Plug account: <email> (the password lives in /etc/pumpastic.env on the Pi only)
+
+## Alerts
+
+- ntfy topic: <a long random string — topics are public>
+
+## Decisions and measurements log
+
+- <date>: <what was measured or decided, and why>

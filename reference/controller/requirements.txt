@@ -1,0 +1,17 @@
+# Pumpastic Controller — Python Dependencies
+# Install: pip3 install -r requirements.txt --break-system-packages
+
+# NOTE: `tapo` is a Rust extension. The RPi 3 (this project) runs aarch64
+# (64-bit Debian), and pre-built aarch64 wheels are available on PyPI.
+# Do NOT use python-kasa — the P110M firmware uses TPAP encryption which
+# python-kasa does not support.
+
+paho-mqtt>=2.0
+tapo>=0.8
+flask>=3.0
+pyyaml>=6.0
+requests>=2.31
+pillow>=10.0        # e-ink frame renderer (eink_display.py)
+pyserial>=3.5       # Tank A USB serial bridge (serial_bridge.py)
+pytest>=7.0
+pytest-asyncio>=0.23
